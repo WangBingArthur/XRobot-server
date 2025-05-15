@@ -44,8 +44,12 @@ async def handleAudioMessage(conn, audio):
             text_len, _ = remove_punctuation_and_length(text)
             if text_len > 0:
                 # 使用自定义模块进行上报
+                conn.logger.bind(tag=TAG).debug(f"enqueue_tts_report文本: {text}")
                 enqueue_asr_report(conn, text, copy.deepcopy(conn.asr_audio))
-
+                llm_type = conn.config["selected_module"]["LLM"] if conn.config["selected_module"] else ""
+                if llm_type == "OllamaLLM":
+                    text = text + " /no_think"
+                conn.logger.bind(tag=TAG).debug(f"llm: {llm_type}, startToChat: {text}")
                 await startToChat(conn, text)
             else:
                 conn.asr_server_receive = True

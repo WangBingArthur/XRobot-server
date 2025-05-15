@@ -1,6 +1,7 @@
 import asyncio
 from config.logger import setup_logging
 import os
+import re
 from abc import ABC, abstractmethod
 from core.utils.tts import MarkdownCleaner
 from core.utils.util import audio_to_data
@@ -23,6 +24,26 @@ class TTSProviderBase(ABC):
         try:
             max_repeat_time = 5
             text = MarkdownCleaner.clean_markdown(text)
+            # 正则匹配 <emo> 和 </emo> 之间的内容
+            emo_pattern = r"<emo>([a-zA-Z]+)</emo>"
+            # 正则匹配 <face> 和 </face> 之间的内容
+            face_pattern = r"<face>([a-zA-Z]+)</face>"
+            # 正则匹配 <act> 和 </act> 之间的内容
+            act_pattern = r"<act>([a-zA-Z]+)</act>"
+            # 提取 emo、face 和 act 内容
+            emo_match = re.search(emo_pattern, text)
+            face_match = re.search(face_pattern, text)
+            act_match = re.search(act_pattern, text)
+            # 去除整个 <emo>...</emo>、<face>...</face> 和 <act>...</act> 部分
+            if emo_match:
+                self.emo_content = emo_match.group(1)
+                text = re.sub(emo_pattern, '', text)
+            if face_match:
+                self.face_content = face_match.group(1)
+                text = re.sub(face_pattern, '', text)
+            if act_match:
+                self.act_content = act_match.group(1)
+                text = re.sub(act_pattern, '', text)
             while not os.path.exists(tmp_file) and max_repeat_time > 0:
                 try:
                     asyncio.run(self.text_to_speak(text, tmp_file))

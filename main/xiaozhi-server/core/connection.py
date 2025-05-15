@@ -505,6 +505,7 @@ class ConnectionHandler:
 
     def chat(self, query):
 
+        start_time = time.time()
         self.dialogue.put(Message(role="user", content=query))
 
         response_message = []
@@ -529,6 +530,8 @@ class ConnectionHandler:
         self.llm_finish_task = False
         text_index = 0
         for content in llm_responses:
+            end_time = time.time()
+            self.logger.bind(tag=TAG).debug(f"大模型返回时间: {end_time - start_time} 秒, 生成token={content}")
             response_message.append(content)
             if self.client_abort:
                 break
@@ -663,7 +666,7 @@ class ConnectionHandler:
                         break
 
                     end_time = time.time()
-                    # self.logger.bind(tag=TAG).debug(f"大模型返回时间: {end_time - start_time} 秒, 生成token={content}")
+                    self.logger.bind(tag=TAG).debug(f"大模型返回时间: {end_time - start_time} 秒, 生成token={content}")
 
                     # 处理文本分段和TTS逻辑
                     # 合并当前全部文本并处理未分割部分
